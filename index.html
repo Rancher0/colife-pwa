@@ -12,7 +12,7 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- VISUELLE LIVE-BÜHNE (Eigenheim-Diorama, Tageszeit, Wetter & Ausbauten) -->
+    <!-- VISUELLE LIVE-BÜHNE (3 Modi: Außen-Diorama, Puppenhaus-Innenansicht, Lausitz-Karte) -->
     <header class="stage-card">
       <div class="stage-topbar">
         <div class="brand-group">
@@ -26,8 +26,15 @@
         </div>
       </div>
 
-      <div id="diorama-container" class="diorama-container" title="Tipp auf Gebäude oder Haustiere für Details!">
-        <!-- Animiertes SVG-Eigenheim & Landschaft wird von app.js gerendert -->
+      <div id="diorama-container" class="diorama-container" title="Tippe auf Räume, Gebäude oder Orte für Details!">
+        <!-- Animiertes SVG (Außen / Innen / Karte) wird von app.js gerendert -->
+      </div>
+
+      <!-- Umschalter für die 3 Grafik-Ansichten -->
+      <div class="stage-switcher">
+        <button class="stage-mode-btn active" data-stage="exterior">🏡 Außen-Panorama</button>
+        <button class="stage-mode-btn" data-stage="interior">🛋️ Haus-Innenansicht</button>
+        <button class="stage-mode-btn" data-stage="map">🗺️ Lausitz-Karte</button>
       </div>
 
       <!-- HUD-Schnellwerte -->
@@ -71,6 +78,12 @@
         <button id="edit-note-btn" class="note-btn" title="Notiz ändern">✏️ Notiz</button>
       </div>
 
+      <!-- Teamwork-Kombo-Banner (erscheint bei Paar-Synergien!) -->
+      <div id="combo-banner" class="combo-banner hidden"></div>
+
+      <!-- 7-Tage-Schichtplaner (Mo-So) -->
+      <div id="week-strip" class="week-strip" title="Euer 7-Tage-Schichtplan (Frühschicht / Spätschicht / Frei)"></div>
+
       <div class="player-tabs">
         <button id="tab-lena" class="tab-btn active" data-player="lena">
           <div class="tab-title">🧪 Lena <span id="lena-done-dot" class="status-dot"></span></div>
@@ -84,9 +97,12 @@
 
       <section class="card player-card">
         <div class="player-header">
-          <div>
-            <h2 id="player-name">Lena</h2>
-            <p id="player-job" class="muted">Chemielaborantin · BASF Schwarzheide</p>
+          <div class="player-identity">
+            <div id="player-avatar-box" class="avatar-box"></div>
+            <div>
+              <h2 id="player-name">Lena</h2>
+              <p id="player-job" class="muted">Chemielaborantin · BASF Schwarzheide</p>
+            </div>
           </div>
           <div class="player-badges">
             <span id="player-shift-badge" class="badge badge-soft">🌅 Frühschicht</span>
@@ -172,7 +188,7 @@
         <div class="phase-header">
           <div>
             <h3>🔨 Haus & Grundstück ausbauen</h3>
-            <p class="muted">Jeder Ausbau erscheint sofort sichtbar oben an eurem Haus und bringt dauerhafte Vorteile!</p>
+            <p class="muted">Jeder Ausbau erscheint sofort sichtbar in der Außen- und Innenansicht oben!</p>
           </div>
         </div>
         <div id="upgrades-list" class="upgrades-grid"></div>
@@ -264,13 +280,38 @@
     </main>
   </div>
 
-  <!-- MODAL FÜR ALLTAGS-DILEMMAS -->
+  <!-- MODAL 1: ALLTAGS-DILEMMAS -->
   <div id="dilemma-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
       <span class="badge">⚡ Alltags-Entscheidung</span>
       <h3 id="dilemma-title">Titel</h3>
       <p id="dilemma-text" class="dilemma-body">Beschreibung</p>
       <div id="dilemma-choices" class="dilemma-choices"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: BERUFS-TIMING-MINISPIEL -->
+  <div id="minigame-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <span class="badge">🎮 Schicht-Herausforderung</span>
+      <h3 id="mg-title">Präzisions-Check</h3>
+      <p id="mg-desc" class="dilemma-body">Stoppe den Zeiger in der goldenen Mitte!</p>
+      <div class="mg-track">
+        <div class="mg-zone-good"></div>
+        <div class="mg-zone-gold"></div>
+        <div id="mg-cursor" class="mg-cursor"></div>
+      </div>
+      <button id="mg-stop-btn" class="primary-btn" style="padding:12px;font-size:0.95rem;">⚡ JETZT STOPPEN!</button>
+    </div>
+  </div>
+
+  <!-- MODAL 3: SONNTAGS-WOCHENBILANZ -->
+  <div id="report-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <span class="badge">📊 Wochen-Abschluss & Zahltag</span>
+      <h3>Eure Wochen-Bilanz</h3>
+      <div id="report-body" class="dilemma-body"></div>
+      <button id="report-close-btn" class="primary-btn">🚀 Start in die neue Woche!</button>
     </div>
   </div>
 

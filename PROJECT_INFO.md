@@ -7,16 +7,20 @@ Diese Datei beschreibt das Projekt so, dass ein KI-Coding-Assistent (zum Beispie
 **CoLife** ist eine rundenbasierte **Private-Circle-Lebenssimulation & Alltagsplaner-App** als **Progressive Web App (PWA)** für iOS und Android (später optional via Capacitor als native Store-App).
 Spieler leben in einem gemeinsamen Haushalt (Start-Setting: **Lena**, Chemielaborantin bei der BASF in Schwarzheide, und **Tom**, Hubschrauber-/Gerätemechaniker auf dem Bundeswehr-Flugplatz) und meistern ihren Alltag: Schichtdienst, Pendeln & Tanken bei schwankenden Spritpreisen, Einkaufen, Kochen, Haushalt, Haus-Ausbau, Zufalls-Dilemmas sowie Unternehmungen mit der **Familie-&-Freunde-Bande** (Konzerte, Grillabende, Ausflüge, Nachbarschaftshilfe).
 
-## Funktionen (Stand v3.0)
+## Funktionen (Stand v4.0)
 
-- **Animierte & Interaktive Live-Bühne (SVG/CSS-Diorama):**
-  - Dynamische Darstellung des gemeinsamen Eigenheims & Grundstücks inkl. Silhouetten von BASF Schwarzheide und dem Bundeswehr-Fliegerhorst.
-  - Kontinuierliche Animationen: Fliegender Hubschrauber am Fliegerhorst, aufsteigender Rauch aus Schornstein & Werk, ziehende Wolken, funkelnde Sterne/Lichterkette, Regen-/Schneefall und hüpfender Hofhund Balu.
-  - **Tap-to-Inspect:** Gebäude, Carport, Terrasse und Haustiere im Diorama sind antippbar und zeigen Live-Status-Infos.
-  - Gekaufte Haus-Upgrades (Holzterrasse & Grill, PV-Anlage auf dem Dach, Kaminofen, Werkstatt-Garage, Garten/Gewächshaus) sowie Haustiere (Hund Balu, Katze Mimi) werden direkt sichtbar am Haus dargestellt.
-- **Game-Feel: Floating FX & WebAudio-Synthesizer:**
-  - Schwebende Belohnungs-Popups (`+145 €`, `🍲 Lecker!`, `⛽ 100 %`) direkt beim Tippen.
-  - Prozedurale Soundeffekte über die WebAudio API (`CoLifeAudio` in `app.js`, ohne externe Audiodateien, per `🔊/🔇` im Header schaltbar).
+- **3 Umschaltbare Live-Grafik-Bühnen (SVG/CSS-Diorama):**
+  1. **🏡 Außen-Panorama (`exterior`):** Eigenheim, Carport mit Autos, Garten, Holzterrasse, animierte Figuren von Lena & Tom vor dem Haus, fliegender Hubschrauber am Fliegerhorst, rauchender Schornstein & BASF-Werk, Wetter-Animationen und Haustiere.
+  2. **🛋️ Haus-Innenansicht (`interior` – Puppenhaus-Querschnitt):** 3 detaillierte Zimmer (Küche mit sichtbarem Kühlschrank-Füllstand & dampfendem Kochtopf, Wohnzimmer mit Sofa, Lena & Tom, Kaminfeuer & Unordnungs-Indikator, Hauswirtschaftsraum mit Waschmaschine, PV-Wechselrichter & Werkzeug).
+  3. **🗺️ Lausitz-Regionskarte (`map`):** Illustrierte Umgebungskarte (BASF Schwarzheide, Fliegerhorst, Eigenheim, Tankstelle/Supermarkt, Senftenberger See) mit animierten **Live-Standort-Pins (`🧪 Lena`, `🚁 Tom`)**.
+- **Animierte Charakter-Porträts & Konfetti-Partikel:**
+  - Dynamische SVG-Porträts (`buildCharacterAvatarSVG`) für Lena (mit Schutzbrille) und Tom (mit Headset), deren Gesichtsausdruck live auf Laune und Energie reagiert.
+  - Konfetti-Regen (`spawnConfetti`), schwebende Belohnungs-Popups (`spawnFloatingFX`) und WebAudio-Synthesizer (`CoLifeAudio`).
+- **Neue Spielabläufe: Schicht-Minispiel, Teamwork-Kombos, 7-Tage-Planer & Wochen-Bilanz:**
+  - **🎮 Berufs-Timing-Minispiel:** Bei der Fokus-Schicht (*Präzisions-Titration* im BASF-Labor bzw. *Rotor-Drehmoment* am Fliegerhorst) stoppt der Spieler einen schwingenden Balken im goldenen Bereich für bis zu 1,3x Meister-Prämie.
+  - **⚡ Paar-Teamwork-Kombos:** Automatische Synergie-Boni (+Harmonie, +Energie, +Geld), wenn Lena & Tom ihre Tagesaufgaben geschickt aufteilen (z. B. *Einer kauft ein + einer kocht*, *Haushalt + Tanken*, *Power-Paar beide Schichten*).
+  - **📅 7-Tage-Schichtplaner (Mo–So):** Übersichtsleiste für die ganze Woche.
+  - **📊 Sonntags-Wochenbilanz:** Abrechnungs-Modal am Ende jeder Woche mit Einnahmen, Ausgaben, Teamwork-Kombos, Note (**S★ / A / B**) und Wochen-Bonus.
 - **Wochen-Missionen (Couple Quests) & Kühlschrank-Notiz:**
   - Jede Woche 3 gemeinsame Paar-Missionen (`WEEKLY_QUEST_POOL`) mit Fortschrittsbalken und abholbaren Geld-/Harmonie-Prämien.
   - Editierbare **Kühlschrank-Notiz (`fridgeNote`)**, mit der sich Partner Nachrichten direkt auf den Startbildschirm pinnen können (wird per Multiplayer mitsynchronisiert).

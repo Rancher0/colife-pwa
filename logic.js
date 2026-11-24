@@ -1,4 +1,4 @@
-// CoLife v3.0 – Tiefe Spiellogik: Schichten, Karriere, Wochen-Missionen, Haustiere, Kurzurlaube, Kühlschrank-Notiz & Bande
+// CoLife v4.0 – Tiefe Spiellogik: Schichten, Teamwork-Kombos, Orts-Tracking, Wochen-Bilanz, Haustiere & Bande
 
 const PHASES = ["Morgen", "Nachmittag", "Abend"];
 const WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
@@ -60,7 +60,7 @@ const HOUSE_UPGRADES = [
     id: "kitchen",
     name: "🍳 Moderne Einbauküche",
     cost: 950,
-    desc: "Kühlschrank fasst 8 Portionen. Kochen bringt +8 extra Energie & +5 Zufriedenheit.",
+    desc: "Sichtbar in der Innenansicht! Kühlschrank fasst 8 Portionen, Kochen bringt +8 Energie & +5 Laune.",
     tag: "Haushalt"
   },
   {
@@ -74,14 +74,14 @@ const HOUSE_UPGRADES = [
     id: "fireplace",
     name: "🔥 Kaminofen im Wohnzimmer",
     cost: 900,
-    desc: "Rauchender Schornstein! Spart 15 €/Tag Heizkosten in Herbst/Winter & schaltet Kaminabende frei.",
+    desc: "Loderndes Feuer im Wohnzimmer! Spart 15 €/Tag Heizkosten in Herbst/Winter & schaltet Kaminabende frei.",
     tag: "Gemütlichkeit"
   },
   {
     id: "pv",
     name: "☀️ Photovoltaik aufs Dach",
     cost: 1650,
-    desc: "Solarmodule sichtbar auf dem Dach! Senkt tägliche Fixkosten dauerhaft um 14 €/Tag.",
+    desc: "Solarmodule auf dem Dach + Wechselrichter innen! Senkt tägliche Fixkosten dauerhaft um 14 €/Tag.",
     tag: "Finanzen"
   },
   {
@@ -106,7 +106,7 @@ const LIFE_SPECIALS = [
     type: "pet",
     name: "🐈 Hauskatze „Mimi“ aufnehmen",
     cost: 180,
-    desc: "Schnurrt auf dem Sofa! Hält die Haus-Harmonie jeden Tag automatisch um +2 % höher."
+    desc: "Schnurrt im Wohnzimmer! Hält die Haus-Harmonie jeden Tag automatisch um +2 % höher."
   },
   {
     id: "trip_spreewald",
@@ -210,6 +210,7 @@ const DILEMMAS = [
         label: "Überstunden machen (+95 €, +20 XP, -18 Energie)",
         apply: (s) => {
           s.household.money += 95;
+          s.weekStats.earned += 95;
           s.players.lena.xp += 20;
           s.players.lena.energy = clamp(s.players.lena.energy - 18, 0, 100);
           return "Lena hat die Eilprobe analysiert (+95 € Bonus, +20 Karriere-XP).";
@@ -234,6 +235,7 @@ const DILEMMAS = [
         label: "Schrauber-Einsatz leiten (+110 €, +22 XP, -20 Energie)",
         apply: (s) => {
           s.household.money += 110;
+          s.weekStats.earned += 110;
           s.players.tom.xp += 22;
           s.players.tom.energy = clamp(s.players.tom.energy - 20, 0, 100);
           return "Tom hat das Hydraulikventil am NH90 getauscht (+110 € Zulage).";
@@ -260,6 +262,7 @@ const DILEMMAS = [
           const hasWorkshop = s.household.upgrades.includes("workshop");
           const cost = hasWorkshop ? 0 : 35;
           s.household.money -= cost;
+          s.weekStats.spent += cost;
           s.players.tom.energy = clamp(s.players.tom.energy - 12, 0, 100);
           s.household.houseCondition = clamp(s.household.houseCondition + 8, 0, 100);
           return hasWorkshop
@@ -271,6 +274,7 @@ const DILEMMAS = [
         label: "Kundendienst rufen (-140 €, kein Energieverlust)",
         apply: (s) => {
           s.household.money -= 140;
+          s.weekStats.spent += 140;
           s.household.houseCondition = clamp(s.household.houseCondition + 10, 0, 100);
           return "Der Handwerker hat die Waschmaschine repariert (-140 €).";
         }
@@ -286,6 +290,7 @@ const DILEMMAS = [
         label: "2 Tickets sichern (-120 €, +18 Zufriedenheit, +10 % Harmonie, +Bande)",
         apply: (s) => {
           s.household.money -= 120;
+          s.weekStats.spent += 120;
           s.household.harmony = clamp(s.household.harmony + 10, 0, 100);
           s.players.lena.mood = clamp(s.players.lena.mood + 18, 0, 100);
           s.players.tom.mood = clamp(s.players.tom.mood + 18, 0, 100);
@@ -339,6 +344,7 @@ const DILEMMAS = [
         label: "Beide Autos sofort volltanken (-75 € gesamt, beide Tanks 100 %)",
         apply: (s) => {
           s.household.money -= 75;
+          s.weekStats.spent += 75;
           s.players.lena.fuel = 100;
           s.players.tom.fuel = 100;
           return "Schnäppchen! Beide Autos sind für zusammen 75 € randvoll getankt.";
@@ -363,6 +369,7 @@ const DILEMMAS = [
         label: "Klar, sofort mit anpacken! (+50 € Dankeschön-Kasten, +8 Bande, -12 Energie)",
         apply: (s) => {
           s.household.money += 50;
+          s.weekStats.earned += 50;
           s.players.tom.energy = clamp(s.players.tom.energy - 12, 0, 100);
           boostBandMember(s, "micha", 8);
           return "Uwe hat sich riesig gefreut und 50 € für die Grillkasse zugesteckt!";
@@ -412,6 +419,7 @@ function claimQuestReward(state, questId) {
 
   q.claimed = true;
   state.household.money += q.rewardMoney;
+  state.weekStats.earned += q.rewardMoney;
   state.household.harmony = clamp(state.household.harmony + q.rewardHarmony, 0, 100);
   state.log.unshift(`🎁 Wochen-Ziel geschafft („${q.title}“): ${q.rewardText}!`);
   checkAchievements(state);
@@ -430,16 +438,16 @@ function getCareerInfo(playerId, xp) {
   return current;
 }
 
-function getShiftForPlayer(state, playerId) {
-  const weekdayIndex = (state.day - 1) % 7;
+function getShiftForPlayer(state, playerId, dayOffset = 0) {
+  const weekdayIndex = (state.day - 1 + dayOffset) % 7;
   const schedule = WEEKLY_SHIFTS[playerId] || WEEKLY_SHIFTS.lena;
   return schedule[weekdayIndex];
 }
 
 function getShiftLabel(shiftCode) {
-  if (shiftCode === "early") return "🌅 Frühschicht (Morgen)";
-  if (shiftCode === "late") return "🌇 Spätschicht (Nachmittag)";
-  return "🎉 Freier Tag";
+  if (shiftCode === "early") return "🌅 Frühschicht";
+  if (shiftCode === "late") return "🌇 Spätschicht";
+  return "🎉 Frei";
 }
 
 function boostBandMember(state, memberId, delta) {
@@ -457,15 +465,20 @@ function getUpgradeCost(state, upgrade) {
 
 function createInitialState() {
   return {
-    version: 3,
+    version: 4,
     updatedAt: Date.now(),
     day: 1,
     seasonIndex: 0,
     weather: WEATHER_BY_SEASON.Frühling[0].label,
     weatherType: "sun",
     fuelPrice: 1.74,
+    stageMode: "exterior", // "exterior", "interior", "map"
     activePlayerId: "lena",
     activeDilemma: null,
+    weeklyReport: null,
+    lastComboBanner: null,
+    todayActions: { lena: [], tom: [] },
+    weekStats: { earned: 0, spent: 0, shifts: 0, combos: 0 },
     fridgeNote: "📌 Kühlschrank-Notiz: Willkommen zuhause! Wer kauft heute ein?",
     quests: createFreshQuests(),
     multiplayer: {
@@ -493,6 +506,7 @@ function createInitialState() {
         id: "lena",
         name: "Lena",
         avatar: "🧪",
+        location: "home", // "home", "basf", "town", "lake"
         job: "Chemielaborantin · BASF Schwarzheide",
         xp: 25,
         energy: 86,
@@ -508,6 +522,7 @@ function createInitialState() {
         id: "tom",
         name: "Tom",
         avatar: "🚁",
+        location: "home", // "home", "airbase", "town", "lake"
         job: "Gerätemechaniker · Fliegerhorst",
         xp: 25,
         energy: 86,
@@ -521,19 +536,63 @@ function createInitialState() {
       }
     },
     log: [
-      "🏡 Willkommen in CoLife 3.0! Achtet auf eure Schichten, erfüllt Wochen-Missionen und baut euer Haus aus."
+      "🏡 Willkommen in CoLife 4.0! Schaltet oben zwischen Außenansicht, Haus-Innerem und Lausitz-Karte um!"
     ]
   };
 }
 
-// Stellt sicher, dass ältere Spielstände aus v2 nahtlos auf v3 erweitert werden
 function migrateStateIfNeeded(s) {
   if (!s) return createInitialState();
   if (!s.quests) s.quests = createFreshQuests();
   if (!s.fridgeNote) s.fridgeNote = "📌 Kühlschrank-Notiz: Schreibe deinem Partner eine Nachricht!";
   if (!s.household.pets) s.household.pets = [];
-  s.version = 3;
+  if (!s.stageMode) s.stageMode = "exterior";
+  if (!s.todayActions) s.todayActions = { lena: [], tom: [] };
+  if (!s.weekStats) s.weekStats = { earned: 0, spent: 0, shifts: 0, combos: 0 };
+  if (!s.players.lena.location) s.players.lena.location = "home";
+  if (!s.players.tom.location) s.players.tom.location = "home";
+  s.version = 4;
   return s;
+}
+
+// Prüft, ob Lena & Tom heute eine Teamwork-Kombo ausgelöst haben
+function checkDailyTeamworkCombo(state) {
+  const lActs = state.todayActions.lena || [];
+  const tActs = state.todayActions.tom || [];
+  if (lActs.length === 0 || tActs.length === 0) return null;
+
+  const all = [...lActs, ...tActs];
+  const has = (a, b) => (lActs.includes(a) && tActs.includes(b)) || (lActs.includes(b) && tActs.includes(a));
+
+  let comboTitle = null;
+  if (has("grocery", "cook_home") && !state.todayActions.comboFood) {
+    state.todayActions.comboFood = true;
+    comboTitle = "⚡ Küchen-Teamwork! (Einer kauft ein, einer kocht: +6 % Harmonie & +10 Energie)";
+  } else if (has("chores", "refuel") && !state.todayActions.comboOrga) {
+    state.todayActions.comboOrga = true;
+    comboTitle = "⚡ Alltags-Helden! (Haushalt & Tanken perfekt aufgeteilt: +5 % Harmonie & +8 Laune)";
+  } else if (
+    (lActs.includes("work") || lActs.includes("work_master")) &&
+    (tActs.includes("work") || tActs.includes("work_master")) &&
+    !state.todayActions.comboWork
+  ) {
+    state.todayActions.comboWork = true;
+    comboTitle = "⚡ Power-Paar! (Beide Schichten durchgezogen: +40 € Haushalts-Bonus & +4 % Harmonie)";
+    state.household.money += 40;
+    state.weekStats.earned += 40;
+  }
+
+  if (comboTitle) {
+    state.household.harmony = clamp(state.household.harmony + 5, 0, 100);
+    Object.values(state.players).forEach((p) => {
+      p.energy = clamp(p.energy + 8, 0, 100);
+      p.mood = clamp(p.mood + 6, 0, 100);
+    });
+    state.weekStats.combos += 1;
+    state.lastComboBanner = comboTitle;
+    state.log.unshift(comboTitle);
+  }
+  return comboTitle;
 }
 
 function getActionsForPlayer(state, player) {
@@ -579,7 +638,10 @@ function getActionsForPlayer(state, player) {
           player.mood = clamp(player.mood - 3, 0, 100);
           player.xp += 18;
           player.workedToday = true;
+          player.location = player.id === "lena" ? "basf" : "airbase";
           state.household.money += totalPay;
+          state.weekStats.earned += totalPay;
+          state.weekStats.shifts += 1;
           advanceQuestProgress(state, "q_work", 1);
           const newCareer = getCareerInfo(player.id, player.xp);
           player.job = `${newCareer.title} · ${newCareer.place}`;
@@ -587,30 +649,36 @@ function getActionsForPlayer(state, player) {
         }
       });
 
-      // Spezial-Fokus-Schicht (mehr Einsatz = fetter Karriere- & Prämien-Boost!)
+      // Interaktive Fokus-Schicht mit Timing-Minispiel!
       actions.push({
         id: "work_master",
+        isMinigame: true,
         highlight: false,
-        fxText: `+${totalPay + 40} € ★`,
-        sound: "cash",
+        fxText: `+${totalPay + 45} € ★`,
+        sound: "fanfare",
         category: "Beruf",
         title:
           player.id === "lena"
-            ? "🔬 Präzisions-Analyse im Labor"
-            : "⚙️ Helikopter-Turbinen-Prüfung",
-        desc: `+${totalPay + 40} € inkl. Leistungsprämie · +28 XP · -34 Energie · -${fuelNeed} % Tank`,
-        disabled: player.fuel < fuelNeed || player.energy < 34,
-        run: () => {
-          const pay = totalPay + 40;
-          player.energy = clamp(player.energy - 34, 0, 100);
+            ? "🎮 Labor-Minispiel: Präzisions-Analyse"
+            : "🎮 Schrauber-Minispiel: Rotor-Prüfung",
+        desc: `Reaktions-Check für bis zu +${totalPay + 55} € & +32 XP · -32 Energie · -${fuelNeed} % Tank`,
+        disabled: player.fuel < fuelNeed || player.energy < 32,
+        run: (bonusMultiplier = 1) => {
+          const extra = Math.round(45 * bonusMultiplier);
+          const xpGain = Math.round(20 + 12 * bonusMultiplier);
+          const pay = totalPay + extra;
+          player.energy = clamp(player.energy - 32, 0, 100);
           player.fuel = clamp(player.fuel - fuelNeed, 0, 100);
-          player.xp += 28;
+          player.xp += xpGain;
           player.workedToday = true;
+          player.location = player.id === "lena" ? "basf" : "airbase";
           state.household.money += pay;
+          state.weekStats.earned += pay;
+          state.weekStats.shifts += 1;
           advanceQuestProgress(state, "q_work", 1);
           const newCareer = getCareerInfo(player.id, player.xp);
           player.job = `${newCareer.title} · ${newCareer.place}`;
-          return `Stark! ${player.name} hat die Schicht mit Bestleistung gemeistert (+${pay} €, +28 XP)!`;
+          return `Meisterleistung! ${player.name} holt +${pay} € (inkl. ${extra} € Prämie) & +${xpGain} XP!`;
         }
       });
 
@@ -625,6 +693,7 @@ function getActionsForPlayer(state, player) {
         run: () => {
           player.vacationDays -= 1;
           player.vacationToday = true;
+          player.location = "home";
           player.energy = clamp(player.energy + 18, 0, 100);
           player.mood = clamp(player.mood + 12, 0, 100);
           return `${player.name} nimmt heute einen Urlaubstag und genießt die freie Zeit!`;
@@ -646,7 +715,10 @@ function getActionsForPlayer(state, player) {
           player.mood = clamp(player.mood - 6, 0, 100);
           player.xp += 22;
           player.workedToday = true;
+          player.location = player.id === "lena" ? "basf" : "airbase";
           state.household.money += pay;
+          state.weekStats.earned += pay;
+          state.weekStats.shifts += 1;
           advanceQuestProgress(state, "q_work", 1);
           return `${player.name} hat eine Zusatzschicht mit Zuschlag geschoben (+${pay} €)!`;
         }
@@ -654,7 +726,7 @@ function getActionsForPlayer(state, player) {
     }
   }
 
-  // 2. TANKEN (dynamischer Literpreis!)
+  // 2. TANKEN
   const missingPercent = 100 - player.fuel;
   const litersNeeded = Math.max(5, Math.round((missingPercent / 100) * 50));
   const rawFuelCost = Math.round(litersNeeded * state.fuelPrice);
@@ -670,7 +742,9 @@ function getActionsForPlayer(state, player) {
     disabled: player.fuel >= 95 || state.household.money < fuelCost,
     run: () => {
       state.household.money -= fuelCost;
+      state.weekStats.spent += fuelCost;
       player.fuel = 100;
+      player.location = "town";
       player.energy = clamp(player.energy - 6, 0, 100);
       return `${player.name} hat ${litersNeeded} L für ${fuelCost} € vollgetankt.`;
     }
@@ -687,14 +761,16 @@ function getActionsForPlayer(state, player) {
     disabled: state.household.money < 45 || state.household.fridge >= maxFridge,
     run: () => {
       state.household.money -= 45;
+      state.weekStats.spent += 45;
       state.household.fridge = clamp(state.household.fridge + 4, 0, maxFridge);
+      player.location = "town";
       player.energy = clamp(player.energy - 10, 0, 100);
       state.household.harmony = clamp(state.household.harmony + 3, 0, 100);
       return `${player.name} hat den Kühlschrank frisch aufgefüllt (${state.household.fridge}/${maxFridge} Portionen).`;
     }
   });
 
-  // 4. KOCHEN (nutzt Kühlschrank-Vorräte, stärkt BEIDE Partner!)
+  // 4. KOCHEN
   const cookBonus = state.household.upgrades.includes("kitchen") ? 8 : 0;
   actions.push({
     id: "cook_home",
@@ -708,6 +784,7 @@ function getActionsForPlayer(state, player) {
       state.household.fridge -= 2;
       state.household.harmony = clamp(state.household.harmony + 5, 0, 100);
       state.household.houseCondition = clamp(state.household.houseCondition + 4, 0, 100);
+      player.location = "home";
       advanceQuestProgress(state, "q_cook", 1);
       Object.values(state.players).forEach((p) => {
         p.energy = clamp(p.energy + 16 + cookBonus, 0, 100);
@@ -717,7 +794,7 @@ function getActionsForPlayer(state, player) {
     }
   });
 
-  // 5. WÄSCHE, PUTZEN & GARTEN
+  // 5. WÄSCHE, PUTZEN & ORDNUNG
   actions.push({
     id: "chores",
     fxText: "🏡 +15 % Ordnung",
@@ -729,13 +806,13 @@ function getActionsForPlayer(state, player) {
     run: () => {
       state.household.houseCondition = clamp(state.household.houseCondition + 15, 0, 100);
       state.household.harmony = clamp(state.household.harmony + 4, 0, 100);
+      player.location = "home";
       player.energy = clamp(player.energy - 14, 0, 100);
       advanceQuestProgress(state, "q_chores", 1);
       return `${player.name} hat Wäsche gewaschen und das Haus auf Vordermann gebracht.`;
     }
   });
 
-  // OPTIONAL: GASSI-RUNDE MIT HOFHUND BALU
   if (hasDog) {
     actions.push({
       id: "walk_dog",
@@ -748,8 +825,9 @@ function getActionsForPlayer(state, player) {
       run: () => {
         player.energy = clamp(player.energy + 10, 0, 100);
         player.mood = clamp(player.mood + 14, 0, 100);
+        player.location = "lake";
         state.household.harmony = clamp(state.household.harmony + 4, 0, 100);
-        return `${player.name} hat mit Labrador Balu eine große Runde durch die Natur gedreht!`;
+        return `${player.name} hat mit Labrador Balu eine große Runde am See gedreht!`;
       }
     });
   }
@@ -761,17 +839,19 @@ function getActionsForPlayer(state, player) {
       fxText: "🍷 +10 % Harmonie",
       sound: "fanfare",
       category: "Freizeit",
-      title: "🍷 Essen gehen / Konzertabend",
+      title: "🍷 Essen gehen / Konzert am See",
       desc: "-85 € · +20 Zufriedenheit für beide · +10 % Harmonie",
       disabled: state.household.money < 85,
       run: () => {
         state.household.money -= 85;
+        state.weekStats.spent += 85;
         state.household.harmony = clamp(state.household.harmony + 10, 0, 100);
         Object.values(state.players).forEach((p) => {
           p.mood = clamp(p.mood + 20, 0, 100);
           p.energy = clamp(p.energy + 6, 0, 100);
+          p.location = "lake";
         });
-        return `${player.name} hat einen wunderschönen Abend zu zweit organisiert (-85 €)!`;
+        return `${player.name} hat einen wunderschönen Abend am Senftenberger See organisiert (-85 €)!`;
       }
     });
 
@@ -793,6 +873,7 @@ function getActionsForPlayer(state, player) {
           });
           Object.values(state.players).forEach((p) => {
             p.mood = clamp(p.mood + 16, 0, 100);
+            p.location = "home";
           });
           return "Legendärer Grillabend auf eurer Holzterrasse mit der ganzen Bande!";
         }
@@ -813,6 +894,7 @@ function getActionsForPlayer(state, player) {
           Object.values(state.players).forEach((p) => {
             p.energy = clamp(p.energy + 22, 0, 100);
             p.mood = clamp(p.mood + 14, 0, 100);
+            p.location = "home";
           });
           return "Knisterndes Feuer im Kaminofen – pure Entspannung für euch beide!";
         }
@@ -826,13 +908,14 @@ function getActionsForPlayer(state, player) {
     fxText: "⚡ +24 Energie",
     sound: "good",
     category: "Erholung",
-    title: "🛋️ Entspannen & Kraft tanken",
+    title: "🛋️ Zuhause entspannen",
     desc: "+24 Energie · +7 Zufriedenheit",
     disabled: false,
     run: () => {
       player.energy = clamp(player.energy + 24, 0, 100);
       player.mood = clamp(player.mood + 7, 0, 100);
-      return `${player.name} gönnt sich eine wohlverdiente Pause.`;
+      player.location = "home";
+      return `${player.name} gönnt sich zuhause eine wohlverdiente Pause.`;
     }
   });
 
@@ -845,6 +928,7 @@ function buyLifeSpecial(state, specialId) {
   if (item.type === "pet" && state.household.pets.includes(item.id)) return false;
 
   state.household.money -= item.cost;
+  state.weekStats.spent += item.cost;
 
   if (item.type === "pet") {
     state.household.pets.push(item.id);
@@ -902,6 +986,7 @@ function buyHouseUpgrade(state, upgradeId) {
   if (state.household.money < cost) return false;
 
   state.household.money -= cost;
+  state.weekStats.spent += cost;
   state.household.upgrades.push(upgradeId);
   state.household.harmony = clamp(state.household.harmony + 6, 0, 100);
   state.household.houseCondition = clamp(state.household.houseCondition + 10, 0, 100);
@@ -936,6 +1021,7 @@ function makeLoanPayment(state, amount) {
   if (state.household.money < amount || state.household.loanRemaining <= 0) return false;
   const actual = Math.min(amount, state.household.loanRemaining);
   state.household.money -= actual;
+  state.weekStats.spent += actual;
   state.household.loanRemaining -= actual;
   state.household.harmony = clamp(state.household.harmony + 4, 0, 100);
   state.log.unshift(`🏦 Sondertilgung: ${actual} € vom Hauskredit abbezahlt!`);
@@ -963,7 +1049,7 @@ function checkAchievements(state) {
   if (state.band.members.every((m) => m.bond >= 80)) add("🍻 Legendäre Familie-&-Freunde-Bande");
 }
 
-function performAction(state, playerId, actionId) {
+function performAction(state, playerId, actionId, minigameMultiplier = 1) {
   const player = state.players[playerId];
   if (!player || player.doneToday) return null;
 
@@ -971,10 +1057,13 @@ function performAction(state, playerId, actionId) {
   if (!action || action.disabled) return null;
 
   const weekday = WEEKDAYS[(state.day - 1) % 7];
-  const message = action.run();
+  const message = action.run(minigameMultiplier);
   state.log.unshift(`${weekday}, ${PHASES[player.phaseIndex]}: ${message}`);
 
-  // Spritpreis schwankt leicht je nach Tageszeit
+  if (!state.todayActions) state.todayActions = { lena: [], tom: [] };
+  state.todayActions[playerId].push(actionId);
+  checkDailyTeamworkCombo(state);
+
   const jitter = (Math.random() - 0.48) * 0.08;
   state.fuelPrice = Math.max(1.56, Math.min(1.96, Number((state.fuelPrice + jitter).toFixed(2))));
 
@@ -994,7 +1083,6 @@ function advanceDay(state) {
   const season = SEASONS[state.seasonIndex];
   const isWinterOrAutumn = season === "Winter" || season === "Herbst";
 
-  // Prüfen, ob jemand seine Pflichtschicht geschwänzt hat
   Object.values(state.players).forEach((p) => {
     const shift = getShiftForPlayer(state, p.id);
     if (shift !== "free" && !p.workedToday && !p.vacationToday) {
@@ -1004,7 +1092,6 @@ function advanceDay(state) {
     }
   });
 
-  // Fixkosten berechnen (mit Boni durch Kaminofen & PV-Anlage)
   let dailyFixedCost = isWinterOrAutumn ? 58 : 42;
   if (isWinterOrAutumn && state.household.upgrades.includes("fireplace")) {
     dailyFixedCost -= 15;
@@ -1014,13 +1101,13 @@ function advanceDay(state) {
   }
 
   state.household.money -= dailyFixedCost;
+  state.weekStats.spent += dailyFixedCost;
   state.household.houseCondition = clamp(state.household.houseCondition - 7, 0, 100);
 
   if (state.household.houseCondition < 40) {
     state.household.harmony = clamp(state.household.harmony - 5, 0, 100);
   }
 
-  // Haustier-Boni
   if (state.household.pets.includes("dog_balu")) {
     Object.values(state.players).forEach((p) => {
       p.mood = clamp(p.mood + 4, 0, 100);
@@ -1030,34 +1117,61 @@ function advanceDay(state) {
     state.household.harmony = clamp(state.household.harmony + 2, 0, 100);
   }
 
-  // Garten-Upgrade liefert alle 2 Tage frisches Gemüse
   const maxFridge = state.household.upgrades.includes("kitchen") ? 8 : 6;
   if (state.household.upgrades.includes("garden") && state.day % 2 === 0) {
     state.household.fridge = clamp(state.household.fridge + 1, 0, maxFridge);
   }
 
-  // Oma & Opa Sonntags-Bonus ab 80 % Verbundenheit
   const oma = state.band.members.find((m) => m.id === "oma_opa");
   if (state.day % 7 === 0 && oma && oma.bond >= 80) {
     state.household.fridge = clamp(state.household.fridge + 2, 0, maxFridge);
     state.log.unshift("🍰 Sonntags-Überraschung: Oma Erna hat frischen Kuchen vorbeigebracht (+2 Vorräte)!");
   }
 
-  // Wöchentliche Hauskredit-Rate & Neue Wochen-Missionen am Sonntag
+  // Am Sonntagabend: Wochen-Bilanz erstellen!
   if (state.day % 7 === 0) {
     if (state.household.loanRemaining > 0) {
       const weeklyRate = 250;
       state.household.money -= weeklyRate;
+      state.weekStats.spent += weeklyRate;
       state.household.loanRemaining = Math.max(0, state.household.loanRemaining - weeklyRate);
-      state.log.unshift(`🏦 Wochen-Tilgung: -${weeklyRate} € für euren Hauskredit (Restschuld: ${state.household.loanRemaining.toLocaleString("de-DE")} €).`);
     }
+
+    const net = state.weekStats.earned - state.weekStats.spent;
+    const score = state.household.harmony + state.household.houseCondition + (net > 0 ? 30 : 0);
+    let grade = "B";
+    let bonus = 80;
+    if (score >= 190) {
+      grade = "S ★";
+      bonus = 220;
+    } else if (score >= 160) {
+      grade = "A";
+      bonus = 140;
+    }
+
+    state.household.money += bonus;
+    state.weeklyReport = {
+      weekNumber: Math.ceil(state.day / 7),
+      earned: state.weekStats.earned,
+      spent: state.weekStats.spent,
+      net,
+      shifts: state.weekStats.shifts,
+      combos: state.weekStats.combos,
+      grade,
+      bonus
+    };
+
+    state.weekStats = { earned: 0, spent: 0, shifts: 0, combos: 0 };
     state.quests = createFreshQuests();
-    state.log.unshift("🎯 Neue Woche, neue Paar-Missionen! Schaut in eure Wochen-Ziele.");
   }
+
+  state.todayActions = { lena: [], tom: [] };
+  state.lastComboBanner = null;
 
   Object.values(state.players).forEach((p) => {
     p.energy = clamp(p.energy + 30, 0, 100);
     p.phaseIndex = 0;
+    p.location = "home";
     p.workedToday = false;
     p.vacationToday = false;
     p.doneToday = false;
