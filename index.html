@@ -2,91 +2,255 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1e2533" />
-  <title>CoLife – Alltag zu zweit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#141b2d" />
+  <title>CoLife – Alltag, Haus & Bande</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Optionales PeerJS für serverlose Live-Smartphone-Kopplung per Haushalts-Code -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
-    <header class="top-bar">
-      <div class="brand-row">
-        <h1>CoLife</h1>
-        <span id="day-badge" class="badge">Tag 1 · Frühling</span>
-        <span id="weather-badge" class="badge badge-soft">☀️ Mild (16 °C)</span>
+    <!-- VISUELLE LIVE-BÜHNE (Eigenheim-Diorama, Tageszeit, Wetter & Ausbauten) -->
+    <header class="stage-card">
+      <div class="stage-topbar">
+        <div class="brand-group">
+          <span class="brand-logo">🏡 CoLife</span>
+          <span id="day-badge" class="badge">Tag 1 · Mo · Frühling</span>
+        </div>
+        <div class="stage-badges">
+          <span id="weather-badge" class="badge badge-glass">☀️ 17 °C</span>
+          <span id="sync-pill" class="badge badge-sync" title="Multiplayer-Status">🟢 Lokal</span>
+        </div>
       </div>
 
-      <div class="household-stats">
-        <div class="stat-pill">
-          <span class="label">Haushaltskasse</span>
+      <div id="diorama-container" class="diorama-container phase-morgen">
+        <!-- SVG-Eigenheim & Landschaft wird dynamisch von app.js gerendert -->
+      </div>
+
+      <!-- HUD-Schnellwerte -->
+      <div class="hud-grid">
+        <div class="hud-pill">
+          <span class="hud-label">💰 Kasse</span>
           <strong id="money-val">2.450 €</strong>
         </div>
-        <div class="stat-pill">
-          <span class="label">Haus & Ordnung</span>
+        <div class="hud-pill">
+          <span class="hud-label">🏡 Ordnung</span>
           <strong id="house-val">82 %</strong>
         </div>
-        <div class="stat-pill">
-          <span class="label">Harmonie</span>
-          <strong id="harmony-val">78 %</strong>
+        <div class="hud-pill">
+          <span class="hud-label">❤️ Harmonie</span>
+          <strong id="harmony-val">80 %</strong>
+        </div>
+        <div class="hud-pill">
+          <span class="hud-label">🧊 Vorräte</span>
+          <strong id="fridge-val">4 / 6</strong>
+        </div>
+        <div class="hud-pill">
+          <span class="hud-label">⛽ Benzin</span>
+          <strong id="fuelprice-val">1,74 €/L</strong>
         </div>
       </div>
     </header>
 
-    <nav class="player-tabs" aria-label="Haushaltsmitglieder">
-      <button id="tab-lena" class="tab-btn active" data-player="lena">
-        🧪 Lena <small>BASF · Labor</small>
-      </button>
-      <button id="tab-tom" class="tab-btn" data-player="tom">
-        🚁 Tom <small>Flugplatz · Mechanik</small>
-      </button>
+    <!-- HAUPT-NAVIGATION (4 Tabs) -->
+    <nav class="main-nav" aria-label="Hauptmenü">
+      <button class="nav-tab active" data-view="play">🕹️ Alltag</button>
+      <button class="nav-tab" data-view="house">🔨 Haus (<span id="upgrade-count">0/6</span>)</button>
+      <button class="nav-tab" data-view="band">🍻 Bande</button>
+      <button class="nav-tab" data-view="multi">📡 Koop</button>
     </nav>
 
-    <main class="main-content">
+    <!-- VIEW 1: ALLTAG & SCHICHT -->
+    <main id="view-play" class="view-section active">
+      <div class="player-tabs">
+        <button id="tab-lena" class="tab-btn active" data-player="lena">
+          <div class="tab-title">🧪 Lena <span id="lena-done-dot" class="status-dot"></span></div>
+          <small id="lena-shift-tag">Frühschicht</small>
+        </button>
+        <button id="tab-tom" class="tab-btn" data-player="tom">
+          <div class="tab-title">🚁 Tom <span id="tom-done-dot" class="status-dot"></span></div>
+          <small id="tom-shift-tag">Frühschicht</small>
+        </button>
+      </div>
+
       <section class="card player-card">
         <div class="player-header">
           <div>
             <h2 id="player-name">Lena</h2>
             <p id="player-job" class="muted">Chemielaborantin · BASF Schwarzheide</p>
           </div>
-          <span id="player-vacation" class="badge badge-soft">🏖️ 28 Urlaubstage</span>
+          <div class="player-badges">
+            <span id="player-shift-badge" class="badge badge-soft">🌅 Frühschicht</span>
+            <span id="player-vacation" class="badge badge-soft">🏖️ 28 UT</span>
+          </div>
         </div>
 
         <div class="bars-grid">
           <div class="bar-item">
-            <div class="bar-label"><span>Energie</span><span id="energy-text">85 / 100</span></div>
-            <div class="bar-track"><div id="energy-bar" class="bar-fill energy" style="width: 85%"></div></div>
+            <div class="bar-label"><span>⚡ Energie</span><span id="energy-text">86 / 100</span></div>
+            <div class="bar-track"><div id="energy-bar" class="bar-fill energy" style="width: 86%"></div></div>
           </div>
           <div class="bar-item">
-            <div class="bar-label"><span>Zufriedenheit</span><span id="mood-text">75 / 100</span></div>
-            <div class="bar-track"><div id="mood-bar" class="bar-fill mood" style="width: 75%"></div></div>
+            <div class="bar-label"><span>😊 Zufriedenheit</span><span id="mood-text">78 / 100</span></div>
+            <div class="bar-track"><div id="mood-bar" class="bar-fill mood" style="width: 78%"></div></div>
           </div>
           <div class="bar-item">
-            <div class="bar-label"><span>Tank</span><span id="fuel-text">65 %</span></div>
-            <div class="bar-track"><div id="fuel-bar" class="bar-fill fuel" style="width: 65%"></div></div>
+            <div class="bar-label"><span>⛽ Autotank</span><span id="fuel-text">70 %</span></div>
+            <div class="bar-track"><div id="fuel-bar" class="bar-fill fuel" style="width: 70%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label"><span>📈 Karriere & Erfahrung</span><span id="xp-text">Lv. 1 (25 / 90 XP)</span></div>
+            <div class="bar-track"><div id="xp-bar" class="bar-fill xp" style="width: 28%"></div></div>
           </div>
         </div>
       </section>
 
       <section class="card phase-card">
         <div class="phase-header">
-          <h3 id="phase-title">Phase: Morgen</h3>
-          <span id="phase-status" class="muted">Wähle eine Aktion für diese Phase</span>
+          <div>
+            <h3 id="phase-title">🌅 Phase 1/3: Morgen</h3>
+            <p id="phase-status" class="muted">Wähle eine Aktion für diese Tageszeit</p>
+          </div>
+          <div class="phase-dots">
+            <span id="pdot-0" class="pdot active">Morgen</span>
+            <span id="pdot-1" class="pdot">Nachmittag</span>
+            <span id="pdot-2" class="pdot">Abend</span>
+          </div>
         </div>
         <div id="actions-grid" class="actions-grid"></div>
       </section>
 
       <section class="card log-card">
         <div class="phase-header">
-          <h3>Tagesbuch & Ereignisse</h3>
-          <button id="next-day-btn" class="primary-btn" disabled>Tag abschließen →</button>
+          <h3>📖 Tagesbuch</h3>
+          <div class="btn-row">
+            <button id="share-turn-btn" class="ghost-btn" title="Spielstand per Link/WhatsApp an Partner senden">📲 Zug teilen</button>
+            <button id="next-day-btn" class="primary-btn" disabled>🌙 Tag abschließen →</button>
+          </div>
         </div>
         <ul id="event-log" class="event-log"></ul>
       </section>
     </main>
+
+    <!-- VIEW 2: HAUS-AUSBAU, KREDIT & MEILENSTEINE -->
+    <main id="view-house" class="view-section">
+      <section class="card">
+        <div class="phase-header">
+          <div>
+            <h3>🏦 Eigenheim & Hauskredit</h3>
+            <p class="muted">Jeden Sonntag werden 250 € automatisch getilgt. Sondertilgungen senken die Restschuld sofort.</p>
+          </div>
+          <strong id="loan-val" class="big-stat">142.000 €</strong>
+        </div>
+        <div class="btn-row">
+          <button id="pay-loan-500" class="secondary-btn">🏦 500 € Sondertilgung (+4 % Harmonie)</button>
+          <button id="pay-loan-1500" class="secondary-btn">🏦 1.500 € Sondertilgung</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="phase-header">
+          <div>
+            <h3>🔨 Haus & Grundstück ausbauen</h3>
+            <p class="muted">Jeder Ausbau erscheint sofort sichtbar oben an eurem Haus und bringt dauerhafte Vorteile!</p>
+          </div>
+        </div>
+        <div id="upgrades-list" class="upgrades-grid"></div>
+      </section>
+
+      <section class="card">
+        <h3>🏆 Erreichte Meilensteine</h3>
+        <div id="achievements-list" class="chips-wrap"></div>
+      </section>
+    </main>
+
+    <!-- VIEW 3: FAMILIE & FREUNDE-BANDE -->
+    <main id="view-band" class="view-section">
+      <section class="card">
+        <div class="phase-header">
+          <div>
+            <h3>🍻 Eure Familie-&-Freunde-Bande</h3>
+            <p class="muted">Pflegt eure Kontakte für starke Alltags-Vorteile (Fahrgemeinschaft, Baukosten-Rabatt, Sonntags-Kuchen).</p>
+          </div>
+          <span id="band-code-badge" class="badge badge-soft">Code: BANDE-77</span>
+        </div>
+        <div id="band-list" class="upgrades-grid"></div>
+      </section>
+
+      <section class="card">
+        <h3>➕ Echte Freunde / Familie in die Bande aufnehmen</h3>
+        <p class="muted">Füge Freunde oder Verwandte hinzu, damit sie Teil eurer Welt werden:</p>
+        <div class="input-row">
+          <input id="new-friend-name" type="text" placeholder="Name (z. B. Onkel Marco)" class="text-input" />
+          <input id="new-friend-role" type="text" placeholder="Rolle (z. B. Bruder / Nachbar)" class="text-input" />
+          <button id="add-friend-btn" class="primary-btn">Hinzufügen</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- VIEW 4: MULTIPLAYER & SYNCHRONISIERUNG -->
+    <main id="view-multi" class="view-section">
+      <section class="card">
+        <h3>📡 Haushalt & Koop-Modus</h3>
+        <p class="muted">Spielt gemeinsam auf 2 Smartphones! Gebt auf beiden Handys denselben <strong>Haushalts-Code</strong> ein:</p>
+
+        <div class="form-grid">
+          <label class="form-label">
+            <span>Haushalts-Code (für euch beide im Haus)</span>
+            <input id="household-code-input" type="text" value="LAUSITZ-1" class="text-input" />
+          </label>
+          <label class="form-label">
+            <span>Bande-Code (für Freunde & Familie)</span>
+            <input id="band-code-input" type="text" value="BANDE-77" class="text-input" />
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button id="connect-live-btn" class="primary-btn">🟢 Live-Kopplung starten (Smartphone ↔ Smartphone)</button>
+          <button id="share-whatsapp-btn" class="secondary-btn">📲 Spielstand per WhatsApp / Link senden</button>
+        </div>
+        <p id="multi-status-box" class="status-banner">Status: Lokal gespeichert</p>
+      </section>
+
+      <section class="card">
+        <h3>☁️ Optional: 24/7 Cloud-Datenbank (Firebase / Supabase REST)</h3>
+        <p class="muted">Falls ihr zeitversetzt spielt, ohne Links zu schicken, könnt ihr hier eine kostenlose Realtime-DB-URL hinterlegen:</p>
+        <div class="form-grid">
+          <input id="cloud-url-input" type="url" placeholder="https://dein-projekt.firebaseio.com/colife" class="text-input" />
+          <div class="btn-row">
+            <button id="save-cloud-btn" class="secondary-btn">💾 Cloud-URL speichern</button>
+            <button id="pull-cloud-btn" class="ghost-btn">🔄 Jetzt aus Cloud laden</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>⚙️ Spielstand-Verwaltung</h3>
+        <div class="btn-row">
+          <button id="trigger-dilemma-btn" class="ghost-btn">🎲 Zufalls-Dilemma auslösen</button>
+          <button id="reset-game-btn" class="danger-btn">🗑️ Neues Spiel starten</button>
+        </div>
+      </section>
+    </main>
   </div>
 
+  <!-- MODAL FÜR ALLTAGS-DILEMMAS -->
+  <div id="dilemma-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <span class="badge">⚡ Alltags-Entscheidung</span>
+      <h3 id="dilemma-title">Titel</h3>
+      <p id="dilemma-text" class="dilemma-body">Beschreibung</p>
+      <div id="dilemma-choices" class="dilemma-choices"></div>
+    </div>
+  </div>
+
+  <!-- TOAST-BENACHRICHTIGUNG -->
+  <div id="toast-box" class="toast hidden"></div>
+
   <script src="logic.js"></script>
+  <script src="sync.js"></script>
   <script src="app.js"></script>
   <script>
     if ("serviceWorker" in navigator) {

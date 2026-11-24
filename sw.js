@@ -1,9 +1,10 @@
-const CACHE_NAME = "colife-v1";
+const CACHE_NAME = "colife-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./style.css",
   "./logic.js",
+  "./sync.js",
   "./app.js",
   "./manifest.json"
 ];
@@ -24,8 +25,16 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Network-First mit Offline-Cache-Fallback: holt mit Internet sofort Updates, läuft offline aus dem Cache
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
