@@ -1,4 +1,4 @@
-// CoLife v2.0 – Tiefe Spiellogik: Schichten, Karriere, Tankpreise, Vorräte, Haus-Ausbau, Dilemmas & Bande
+// CoLife v3.0 – Tiefe Spiellogik: Schichten, Karriere, Wochen-Missionen, Haustiere, Kurzurlaube, Kühlschrank-Notiz & Bande
 
 const PHASES = ["Morgen", "Nachmittag", "Abend"];
 const WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
@@ -74,7 +74,7 @@ const HOUSE_UPGRADES = [
     id: "fireplace",
     name: "🔥 Kaminofen im Wohnzimmer",
     cost: 900,
-    desc: "Rauchender Schornstein im Winter! Spart 15 €/Tag Heizkosten in Herbst/Winter.",
+    desc: "Rauchender Schornstein! Spart 15 €/Tag Heizkosten in Herbst/Winter & schaltet Kaminabende frei.",
     tag: "Gemütlichkeit"
   },
   {
@@ -90,6 +90,78 @@ const HOUSE_UPGRADES = [
     cost: 750,
     desc: "Sichtbar im Garten! Liefert alle 2 Tage frisches Gemüse (+1 Kühlschrank-Portion).",
     tag: "Selbstversorger"
+  }
+];
+
+const LIFE_SPECIALS = [
+  {
+    id: "dog_balu",
+    type: "pet",
+    name: "🐕 Hofhund „Balu“ adoptieren",
+    cost: 320,
+    desc: "Toller Labrador im Garten! Bringt täglich +4 Laune für beide und schaltet Gassi-Runden frei."
+  },
+  {
+    id: "cat_mimi",
+    type: "pet",
+    name: "🐈 Hauskatze „Mimi“ aufnehmen",
+    cost: 180,
+    desc: "Schnurrt auf dem Sofa! Hält die Haus-Harmonie jeden Tag automatisch um +2 % höher."
+  },
+  {
+    id: "trip_spreewald",
+    type: "trip",
+    name: "🛶 Kurzurlaub im Spreewald",
+    cost: 240,
+    repeatable: true,
+    desc: "Kahnfahrt & Therme: Lädt Energie (+35) & Zufriedenheit (+25) beider Partner sofort auf!"
+  },
+  {
+    id: "trip_ostsee",
+    type: "trip",
+    name: "🌊 Ostsee-Wochenende zu zweit",
+    cost: 420,
+    repeatable: true,
+    desc: "Strand & Meeresbrise: Energie & Zufriedenheit auf 100 % + 15 % Paar-Harmonie!"
+  }
+];
+
+const WEEKLY_QUEST_POOL = [
+  {
+    id: "q_work",
+    title: "💼 Fleißige Arbeitswoche",
+    desc: "Absolviert zusammen 4 Schichten bei BASF & am Flugplatz.",
+    target: 4,
+    rewardMoney: 160,
+    rewardHarmony: 5,
+    rewardText: "+160 € Prämie & +5 % Harmonie"
+  },
+  {
+    id: "q_cook",
+    title: "🍲 Heimische Küche",
+    desc: "Kocht 3-mal frisch zuhause füreinander.",
+    target: 3,
+    rewardMoney: 90,
+    rewardHarmony: 8,
+    rewardText: "+90 € Haushalts-Bonus & +8 % Harmonie"
+  },
+  {
+    id: "q_band",
+    title: "🍻 Bande zusammenhalten",
+    desc: "Pflegt 2-mal den Kontakt zu Familie oder Freunden.",
+    target: 2,
+    rewardMoney: 110,
+    rewardHarmony: 6,
+    rewardText: "+110 € & +6 % Harmonie"
+  },
+  {
+    id: "q_chores",
+    title: "✨ Blitzeinschlag im Haushalt",
+    desc: "Erledigt 2-mal Wäsche, Haus & Ordnung.",
+    target: 2,
+    rewardMoney: 75,
+    rewardHarmony: 7,
+    rewardText: "+75 € & +7 % Harmonie"
   }
 ];
 
@@ -222,10 +294,10 @@ const DILEMMAS = [
         }
       },
       {
-        label: "Vernünftig bleiben & für das Haus sparen (+50 € Spar-Bonus-Gefühl)",
+        label: "Vernünftig bleiben & für das Haus sparen",
         apply: (s) => {
-          s.players.lena.mood = clamp(s.players.lena.mood - 3, 0, 100);
-          s.players.tom.mood = clamp(s.players.tom.mood - 3, 0, 100);
+          s.players.lena.mood = clamp(s.players.lena.mood - 2, 0, 100);
+          s.players.tom.mood = clamp(s.players.tom.mood - 2, 0, 100);
           return "Ihr habt auf die teuren Tickets verzichtet – das Hausbudget bleibt stabil.";
         }
       }
@@ -281,11 +353,70 @@ const DILEMMAS = [
         }
       }
     ]
+  },
+  {
+    id: "neighbor_carport",
+    title: "🔨 Nachbar Uwe braucht Hilfe am Dach",
+    text: "Nebenan winkt Uwe von der Leiter: „Könnt ihr mir mal eine Stunde die Trapezbleche festhalten?“",
+    choices: [
+      {
+        label: "Klar, sofort mit anpacken! (+50 € Dankeschön-Kasten, +8 Bande, -12 Energie)",
+        apply: (s) => {
+          s.household.money += 50;
+          s.players.tom.energy = clamp(s.players.tom.energy - 12, 0, 100);
+          boostBandMember(s, "micha", 8);
+          return "Uwe hat sich riesig gefreut und 50 € für die Grillkasse zugesteckt!";
+        }
+      },
+      {
+        label: "Heute leider keine Zeit (+6 Energie behalten)",
+        apply: (s) => {
+          s.players.tom.energy = clamp(s.players.tom.energy + 6, 0, 100);
+          return "Ihr habt euch heute auf euer eigenes Haus konzentriert.";
+        }
+      }
+    ]
   }
 ];
 
 function clamp(val, min, max) {
   return Math.max(min, Math.min(max, Math.round(val)));
+}
+
+function createFreshQuests() {
+  return WEEKLY_QUEST_POOL.slice(0, 3).map((q) => ({
+    id: q.id,
+    title: q.title,
+    desc: q.desc,
+    target: q.target,
+    progress: 0,
+    claimed: false,
+    rewardMoney: q.rewardMoney,
+    rewardHarmony: q.rewardHarmony,
+    rewardText: q.rewardText
+  }));
+}
+
+function advanceQuestProgress(state, questId, amount = 1) {
+  if (!state.quests) state.quests = createFreshQuests();
+  const q = state.quests.find((x) => x.id === questId);
+  if (q && !q.claimed) {
+    q.progress = Math.min(q.target, q.progress + amount);
+  }
+}
+
+function claimQuestReward(state, questId) {
+  if (!state.quests) return null;
+  const q = state.quests.find((x) => x.id === questId);
+  if (!q || q.claimed || q.progress < q.target) return null;
+
+  q.claimed = true;
+  state.household.money += q.rewardMoney;
+  state.household.harmony = clamp(state.household.harmony + q.rewardHarmony, 0, 100);
+  state.log.unshift(`🎁 Wochen-Ziel geschafft („${q.title}“): ${q.rewardText}!`);
+  checkAchievements(state);
+  state.updatedAt = Date.now();
+  return q;
 }
 
 function getCareerInfo(playerId, xp) {
@@ -302,7 +433,7 @@ function getCareerInfo(playerId, xp) {
 function getShiftForPlayer(state, playerId) {
   const weekdayIndex = (state.day - 1) % 7;
   const schedule = WEEKLY_SHIFTS[playerId] || WEEKLY_SHIFTS.lena;
-  return schedule[weekdayIndex]; // "early", "late", "free"
+  return schedule[weekdayIndex];
 }
 
 function getShiftLabel(shiftCode) {
@@ -326,7 +457,7 @@ function getUpgradeCost(state, upgrade) {
 
 function createInitialState() {
   return {
-    version: 2,
+    version: 3,
     updatedAt: Date.now(),
     day: 1,
     seasonIndex: 0,
@@ -335,10 +466,12 @@ function createInitialState() {
     fuelPrice: 1.74,
     activePlayerId: "lena",
     activeDilemma: null,
+    fridgeNote: "📌 Kühlschrank-Notiz: Willkommen zuhause! Wer kauft heute ein?",
+    quests: createFreshQuests(),
     multiplayer: {
       householdCode: "LAUSITZ-1",
       bandCode: "BANDE-77",
-      myRole: "both" // "lena", "tom", or "both"
+      myRole: "both"
     },
     household: {
       money: 2450,
@@ -388,9 +521,19 @@ function createInitialState() {
       }
     },
     log: [
-      "🏡 Willkommen in eurem Eigenheim! Plant euren Tag, achtet auf Schichten, Spritpreis & Kühlschrank."
+      "🏡 Willkommen in CoLife 3.0! Achtet auf eure Schichten, erfüllt Wochen-Missionen und baut euer Haus aus."
     ]
   };
+}
+
+// Stellt sicher, dass ältere Spielstände aus v2 nahtlos auf v3 erweitert werden
+function migrateStateIfNeeded(s) {
+  if (!s) return createInitialState();
+  if (!s.quests) s.quests = createFreshQuests();
+  if (!s.fridgeNote) s.fridgeNote = "📌 Kühlschrank-Notiz: Schreibe deinem Partner eine Nachricht!";
+  if (!s.household.pets) s.household.pets = [];
+  s.version = 3;
+  return s;
 }
 
 function getActionsForPlayer(state, player) {
@@ -401,6 +544,7 @@ function getActionsForPlayer(state, player) {
   const hasWorkshop = state.household.upgrades.includes("workshop");
   const hasTerrace = state.household.upgrades.includes("terrace");
   const hasFireplace = state.household.upgrades.includes("fireplace");
+  const hasDog = state.household.pets.includes("dog_balu");
   const steffi = state.band.members.find((m) => m.id === "steffi");
   const lenaFuelUse = player.id === "lena" && steffi && steffi.bond >= 75 ? 10 : 15;
 
@@ -420,6 +564,8 @@ function getActionsForPlayer(state, player) {
       actions.push({
         id: "work",
         highlight: isMyShiftPhase,
+        fxText: `+${totalPay} €`,
+        sound: "cash",
         category: "Beruf",
         title:
           player.id === "lena"
@@ -434,14 +580,44 @@ function getActionsForPlayer(state, player) {
           player.xp += 18;
           player.workedToday = true;
           state.household.money += totalPay;
+          advanceQuestProgress(state, "q_work", 1);
           const newCareer = getCareerInfo(player.id, player.xp);
           player.job = `${newCareer.title} · ${newCareer.place}`;
           return `${player.name} hat die Schicht absolviert (+${totalPay} €, +18 XP).`;
         }
       });
 
+      // Spezial-Fokus-Schicht (mehr Einsatz = fetter Karriere- & Prämien-Boost!)
+      actions.push({
+        id: "work_master",
+        highlight: false,
+        fxText: `+${totalPay + 40} € ★`,
+        sound: "cash",
+        category: "Beruf",
+        title:
+          player.id === "lena"
+            ? "🔬 Präzisions-Analyse im Labor"
+            : "⚙️ Helikopter-Turbinen-Prüfung",
+        desc: `+${totalPay + 40} € inkl. Leistungsprämie · +28 XP · -34 Energie · -${fuelNeed} % Tank`,
+        disabled: player.fuel < fuelNeed || player.energy < 34,
+        run: () => {
+          const pay = totalPay + 40;
+          player.energy = clamp(player.energy - 34, 0, 100);
+          player.fuel = clamp(player.fuel - fuelNeed, 0, 100);
+          player.xp += 28;
+          player.workedToday = true;
+          state.household.money += pay;
+          advanceQuestProgress(state, "q_work", 1);
+          const newCareer = getCareerInfo(player.id, player.xp);
+          player.job = `${newCareer.title} · ${newCareer.place}`;
+          return `Stark! ${player.name} hat die Schicht mit Bestleistung gemeistert (+${pay} €, +28 XP)!`;
+        }
+      });
+
       actions.push({
         id: "vacation",
+        fxText: "🏖️ Frei!",
+        sound: "good",
         category: "Beruf",
         title: "🏖️ Urlaubstag einreichen",
         desc: `-1 Urlaubstag · Befreit heute von der Schicht · +18 Energie · +12 Zufriedenheit`,
@@ -455,9 +631,10 @@ function getActionsForPlayer(state, player) {
         }
       });
     } else if (shift === "free" || player.workedToday) {
-      // Freiwillige Zusatzschicht / Bereitschaft
       actions.push({
         id: "overtime_shift",
+        fxText: `+${career.pay + 45} €`,
+        sound: "cash",
         category: "Beruf",
         title: "💶 Freiwillige Zusatzschicht",
         desc: `+${career.pay + 45} € inkl. Zuschlag · +22 XP · -32 Energie · -15 % Tank`,
@@ -470,6 +647,7 @@ function getActionsForPlayer(state, player) {
           player.xp += 22;
           player.workedToday = true;
           state.household.money += pay;
+          advanceQuestProgress(state, "q_work", 1);
           return `${player.name} hat eine Zusatzschicht mit Zuschlag geschoben (+${pay} €)!`;
         }
       });
@@ -484,6 +662,8 @@ function getActionsForPlayer(state, player) {
 
   actions.push({
     id: "refuel",
+    fxText: "⛽ 100 %",
+    sound: "pop",
     category: "Mobilität",
     title: `⛽ Volltanken (${state.fuelPrice.toFixed(2).replace(".", ",")} €/L)`,
     desc: `-${fuelCost} € für ${litersNeeded} L · Tank auf 100 % · -6 Energie`,
@@ -499,6 +679,8 @@ function getActionsForPlayer(state, player) {
   // 3. EINKAUFEN & VORRÄTE
   actions.push({
     id: "grocery",
+    fxText: "🧊 +4 Vorräte",
+    sound: "pop",
     category: "Haushalt",
     title: "🛒 Wocheneinkauf erledigen",
     desc: `-45 € · +4 Portionen im Kühlschrank (aktuell ${state.household.fridge}/${maxFridge}) · -10 Energie`,
@@ -516,6 +698,8 @@ function getActionsForPlayer(state, player) {
   const cookBonus = state.household.upgrades.includes("kitchen") ? 8 : 0;
   actions.push({
     id: "cook_home",
+    fxText: "🍲 Lecker! +Harmonie",
+    sound: "good",
     category: "Haushalt",
     title: "🍲 Frisch kochen für beide",
     desc: `-2 Vorräte (0 €) · +${16 + cookBonus} Energie & +${8 + cookBonus} Laune für Lena & Tom · +5 % Harmonie`,
@@ -524,6 +708,7 @@ function getActionsForPlayer(state, player) {
       state.household.fridge -= 2;
       state.household.harmony = clamp(state.household.harmony + 5, 0, 100);
       state.household.houseCondition = clamp(state.household.houseCondition + 4, 0, 100);
+      advanceQuestProgress(state, "q_cook", 1);
       Object.values(state.players).forEach((p) => {
         p.energy = clamp(p.energy + 16 + cookBonus, 0, 100);
         p.mood = clamp(p.mood + 8 + cookBonus, 0, 100);
@@ -535,6 +720,8 @@ function getActionsForPlayer(state, player) {
   // 5. WÄSCHE, PUTZEN & GARTEN
   actions.push({
     id: "chores",
+    fxText: "🏡 +15 % Ordnung",
+    sound: "pop",
     category: "Haushalt",
     title: "🧺 Wäsche, Haus & Ordnung",
     desc: "+15 % Haus-Zustand · +4 % Harmonie · -14 Energie",
@@ -543,14 +730,36 @@ function getActionsForPlayer(state, player) {
       state.household.houseCondition = clamp(state.household.houseCondition + 15, 0, 100);
       state.household.harmony = clamp(state.household.harmony + 4, 0, 100);
       player.energy = clamp(player.energy - 14, 0, 100);
+      advanceQuestProgress(state, "q_chores", 1);
       return `${player.name} hat Wäsche gewaschen und das Haus auf Vordermann gebracht.`;
     }
   });
+
+  // OPTIONAL: GASSI-RUNDE MIT HOFHUND BALU
+  if (hasDog) {
+    actions.push({
+      id: "walk_dog",
+      fxText: "🐕 +14 Laune",
+      sound: "good",
+      category: "Haustier",
+      title: "🐕 Gassi-Runde mit Balu",
+      desc: "0 € · +14 Zufriedenheit · +10 Energie an der frischen Luft · +4 % Harmonie",
+      disabled: false,
+      run: () => {
+        player.energy = clamp(player.energy + 10, 0, 100);
+        player.mood = clamp(player.mood + 14, 0, 100);
+        state.household.harmony = clamp(state.household.harmony + 4, 0, 100);
+        return `${player.name} hat mit Labrador Balu eine große Runde durch die Natur gedreht!`;
+      }
+    });
+  }
 
   // 6. ABEND- & FREIZEIT-AKTIONEN
   if (phase === "Abend") {
     actions.push({
       id: "date_night",
+      fxText: "🍷 +10 % Harmonie",
+      sound: "fanfare",
       category: "Freizeit",
       title: "🍷 Essen gehen / Konzertabend",
       desc: "-85 € · +20 Zufriedenheit für beide · +10 % Harmonie",
@@ -569,6 +778,8 @@ function getActionsForPlayer(state, player) {
     if (hasTerrace) {
       actions.push({
         id: "bbq_band",
+        fxText: "🥩 Bande +8 %!",
+        sound: "fanfare",
         category: "Bande",
         title: "🥩 Grillabend auf der Holzterrasse",
         desc: "-2 Vorräte · +16 Zufriedenheit · +8 % Harmonie · +8 Verbundenheit bei allen Freunden!",
@@ -576,6 +787,7 @@ function getActionsForPlayer(state, player) {
         run: () => {
           state.household.fridge -= 2;
           state.household.harmony = clamp(state.household.harmony + 8, 0, 100);
+          advanceQuestProgress(state, "q_band", 1);
           state.band.members.forEach((m) => {
             m.bond = clamp(m.bond + 8, 0, 100);
           });
@@ -590,6 +802,8 @@ function getActionsForPlayer(state, player) {
     if (hasFireplace) {
       actions.push({
         id: "fireplace_evening",
+        fxText: "🔥 +22 Energie",
+        sound: "good",
         category: "Freizeit",
         title: "🔥 Kaminabend zu zweit",
         desc: "0 € · +22 Energie & +14 Zufriedenheit für beide · +8 % Harmonie",
@@ -606,9 +820,11 @@ function getActionsForPlayer(state, player) {
     }
   }
 
-  // 7. AUSRUHEN / POWER-NAP
+  // 7. AUSRUHEN
   actions.push({
     id: "rest",
+    fxText: "⚡ +24 Energie",
+    sound: "good",
     category: "Erholung",
     title: "🛋️ Entspannen & Kraft tanken",
     desc: "+24 Energie · +7 Zufriedenheit",
@@ -623,9 +839,43 @@ function getActionsForPlayer(state, player) {
   return actions;
 }
 
+function buyLifeSpecial(state, specialId) {
+  const item = LIFE_SPECIALS.find((x) => x.id === specialId);
+  if (!item || state.household.money < item.cost) return false;
+  if (item.type === "pet" && state.household.pets.includes(item.id)) return false;
+
+  state.household.money -= item.cost;
+
+  if (item.type === "pet") {
+    state.household.pets.push(item.id);
+    state.household.harmony = clamp(state.household.harmony + 8, 0, 100);
+    Object.values(state.players).forEach((p) => {
+      p.mood = clamp(p.mood + 15, 0, 100);
+    });
+    state.log.unshift(`🐾 Neues Familienmitglied: ${item.name}!`);
+  } else if (item.id === "trip_spreewald") {
+    state.household.harmony = clamp(state.household.harmony + 8, 0, 100);
+    Object.values(state.players).forEach((p) => {
+      p.energy = clamp(p.energy + 35, 0, 100);
+      p.mood = clamp(p.mood + 25, 0, 100);
+    });
+    state.log.unshift(`🛶 Wunderschöner Kurzurlaub im Spreewald! Ihr seid beide tiefenentspannt.`);
+  } else if (item.id === "trip_ostsee") {
+    state.household.harmony = clamp(state.household.harmony + 15, 0, 100);
+    Object.values(state.players).forEach((p) => {
+      p.energy = 100;
+      p.mood = 100;
+    });
+    state.log.unshift(`🌊 Traumhaftes Ostsee-Wochenende! Energie & Laune sind auf 100 %!`);
+  }
+
+  checkAchievements(state);
+  state.updatedAt = Date.now();
+  return true;
+}
+
 function maybeTriggerDilemma(state) {
   if (state.activeDilemma) return;
-  // Ca. 35 % Chance beim Phasenwechsel auf ein Alltags-Dilemma
   if (Math.random() < 0.35) {
     const pick = DILEMMAS[Math.floor(Math.random() * DILEMMAS.length)];
     state.activeDilemma = pick.id;
@@ -674,6 +924,7 @@ function interactWithBand(state, memberId) {
   player.mood = clamp(player.mood + 10, 0, 100);
   member.bond = clamp(member.bond + 10, 0, 100);
   state.household.harmony = clamp(state.household.harmony + 3, 0, 100);
+  advanceQuestProgress(state, "q_band", 1);
 
   state.log.unshift(`🤝 ${player.name} hat Zeit mit ${member.name} verbracht (+10 % Verbundenheit).`);
   checkAchievements(state);
@@ -704,6 +955,8 @@ function checkAchievements(state) {
 
   if (state.household.upgrades.length >= 1) add("🔨 Erster Haus-Ausbau");
   if (state.household.upgrades.length >= 4) add("🏰 Traumhaus in der Lausitz");
+  if (state.household.upgrades.length === HOUSE_UPGRADES.length) add("👑 Voll ausgebautes Eigenheim");
+  if (state.household.pets && state.household.pets.length >= 1) add("🐾 Tierisches Familienglück");
   if (state.household.money >= 4000) add("💰 Finanzpolster > 4.000 €");
   if (state.household.harmony >= 95) add("❤️ Traumpaar (95 %+ Harmonie)");
   if (state.players.lena.xp >= 90 || state.players.tom.xp >= 90) add("📈 Erste Beförderung");
@@ -712,10 +965,10 @@ function checkAchievements(state) {
 
 function performAction(state, playerId, actionId) {
   const player = state.players[playerId];
-  if (!player || player.doneToday) return;
+  if (!player || player.doneToday) return null;
 
   const action = getActionsForPlayer(state, player).find((a) => a.id === actionId);
-  if (!action || action.disabled) return;
+  if (!action || action.disabled) return null;
 
   const weekday = WEEKDAYS[(state.day - 1) % 7];
   const message = action.run();
@@ -734,6 +987,7 @@ function performAction(state, playerId, actionId) {
 
   checkAchievements(state);
   state.updatedAt = Date.now();
+  return action;
 }
 
 function advanceDay(state) {
@@ -762,9 +1016,18 @@ function advanceDay(state) {
   state.household.money -= dailyFixedCost;
   state.household.houseCondition = clamp(state.household.houseCondition - 7, 0, 100);
 
-  // Wenn das Haus sehr unordentlich ist, leidet die Harmonie
   if (state.household.houseCondition < 40) {
     state.household.harmony = clamp(state.household.harmony - 5, 0, 100);
+  }
+
+  // Haustier-Boni
+  if (state.household.pets.includes("dog_balu")) {
+    Object.values(state.players).forEach((p) => {
+      p.mood = clamp(p.mood + 4, 0, 100);
+    });
+  }
+  if (state.household.pets.includes("cat_mimi")) {
+    state.household.harmony = clamp(state.household.harmony + 2, 0, 100);
   }
 
   // Garten-Upgrade liefert alle 2 Tage frisches Gemüse
@@ -775,17 +1038,21 @@ function advanceDay(state) {
 
   // Oma & Opa Sonntags-Bonus ab 80 % Verbundenheit
   const oma = state.band.members.find((m) => m.id === "oma_opa");
-  if ((state.day % 7 === 0) && oma && oma.bond >= 80) {
+  if (state.day % 7 === 0 && oma && oma.bond >= 80) {
     state.household.fridge = clamp(state.household.fridge + 2, 0, maxFridge);
     state.log.unshift("🍰 Sonntags-Überraschung: Oma Erna hat frischen Kuchen vorbeigebracht (+2 Vorräte)!");
   }
 
-  // Wöchentliche Hauskredit-Rate am Sonntag
-  if (state.day % 7 === 0 && state.household.loanRemaining > 0) {
-    const weeklyRate = 250;
-    state.household.money -= weeklyRate;
-    state.household.loanRemaining = Math.max(0, state.household.loanRemaining - weeklyRate);
-    state.log.unshift(`🏦 Wochen-Tilgung: -${weeklyRate} € für euren Hauskredit (Restschuld: ${state.household.loanRemaining.toLocaleString("de-DE")} €).`);
+  // Wöchentliche Hauskredit-Rate & Neue Wochen-Missionen am Sonntag
+  if (state.day % 7 === 0) {
+    if (state.household.loanRemaining > 0) {
+      const weeklyRate = 250;
+      state.household.money -= weeklyRate;
+      state.household.loanRemaining = Math.max(0, state.household.loanRemaining - weeklyRate);
+      state.log.unshift(`🏦 Wochen-Tilgung: -${weeklyRate} € für euren Hauskredit (Restschuld: ${state.household.loanRemaining.toLocaleString("de-DE")} €).`);
+    }
+    state.quests = createFreshQuests();
+    state.log.unshift("🎯 Neue Woche, neue Paar-Missionen! Schaut in eure Wochen-Ziele.");
   }
 
   Object.values(state.players).forEach((p) => {

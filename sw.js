@@ -1,4 +1,4 @@
-const CACHE_NAME = "colife-v2";
+const CACHE_NAME = "colife-v3";
 const ASSETS = [
   "./",
   "./index.html",

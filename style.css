@@ -71,18 +71,130 @@ body {
   letter-spacing: -0.02em;
 }
 
+.icon-pill {
+  border: none;
+  cursor: pointer;
+}
+
 .diorama-container {
   width: 100%;
-  height: 168px;
+  height: 174px;
   position: relative;
   overflow: hidden;
-  transition: background 0.5s ease;
 }
 
 .diorama-container svg {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.diorama-hotspot {
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.diorama-hotspot:hover {
+  filter: brightness(1.18);
+}
+
+/* SVG KEYFRAME ANIMATIONEN */
+@keyframes heliFly {
+  0%, 100% { transform: translate(0px, 0px); }
+  50% { transform: translate(-24px, -6px); }
+}
+
+@keyframes smokeRise1 {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.7; }
+  50% { transform: translateY(-7px) scale(1.18); opacity: 0.38; }
+}
+
+@keyframes smokeRise2 {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.5; }
+  50% { transform: translateY(-10px) scale(1.25); opacity: 0.22; }
+}
+
+@keyframes cloudDrift {
+  0%, 100% { transform: translateX(0px); }
+  50% { transform: translateX(18px); }
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.95; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes dogBounce {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes rainFall {
+  0% { transform: translate(0px, -6px); }
+  100% { transform: translate(-6px, 8px); }
+}
+
+@keyframes snowDrift {
+  0%, 100% { transform: translate(0px, 0px); }
+  50% { transform: translate(5px, 6px); }
+}
+
+.anim-heli { animation: heliFly 5.5s ease-in-out infinite; }
+.anim-smoke-1 { animation: smokeRise1 3.2s ease-in-out infinite; }
+.anim-smoke-2 { animation: smokeRise2 4.1s ease-in-out infinite; }
+.anim-cloud { animation: cloudDrift 9s ease-in-out infinite; }
+.anim-stars { animation: starTwinkle 2.4s ease-in-out infinite; }
+.anim-sun { animation: starTwinkle 4s ease-in-out infinite; }
+.anim-dog { animation: dogBounce 1.4s ease-in-out infinite; }
+.anim-rain { animation: rainFall 0.65s linear infinite; }
+.anim-snow { animation: snowDrift 3.5s ease-in-out infinite; }
+
+/* SCHWEBENDE BELOHNUNGS-POPUPS */
+@keyframes floatUpFX {
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.85); }
+  20% { opacity: 1; transform: translate(-50%, -8px) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -46px) scale(0.95); }
+}
+
+.float-fx {
+  position: fixed;
+  pointer-events: none;
+  z-index: 250;
+  background: rgba(15, 23, 42, 0.92);
+  color: #fde047;
+  border: 1px solid #f59e0b;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  animation: floatUpFX 0.95s ease-out forwards;
+}
+
+/* KÜHLSCHRANK-NOTIZ */
+.fridge-note {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.16), rgba(245, 158, 11, 0.1));
+  border: 1px dashed rgba(250, 204, 21, 0.55);
+  border-radius: 13px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.81rem;
+  color: #fef08a;
+}
+
+.note-btn {
+  background: rgba(250, 204, 21, 0.2);
+  color: #fef08a;
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* HUD UNTER DEM HAUS */
@@ -341,14 +453,14 @@ body {
   border-color: rgba(34, 197, 94, 0.4);
 }
 
-/* AKTIONEN & UPGRADES */
+/* AKTIONEN, MISSIONEN & UPGRADES */
 .actions-grid, .upgrades-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 8px;
 }
 
-.action-btn, .upgrade-card {
+.action-btn, .upgrade-card, .quest-card {
   background: var(--surface-soft);
   color: var(--text);
   border: 1px solid var(--border);
@@ -357,7 +469,7 @@ body {
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   transition: all 0.15s ease;
 }
 
@@ -380,18 +492,23 @@ body {
   cursor: not-allowed;
 }
 
-.action-btn strong, .upgrade-card strong {
+.action-btn strong, .upgrade-card strong, .quest-card strong {
   font-size: 0.88rem;
 }
 
-.action-btn span, .upgrade-card p {
+.action-btn span, .upgrade-card p, .quest-card p {
   font-size: 0.75rem;
   color: var(--muted);
 }
 
-.upgrade-card.owned {
+.upgrade-card.owned, .quest-card.owned {
   border-color: var(--good);
   background: rgba(34, 197, 94, 0.1);
+}
+
+.quest-card.quest-ready {
+  border-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.28);
 }
 
 /* BUTTONS & INPUTS */

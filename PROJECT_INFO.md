@@ -7,15 +7,25 @@ Diese Datei beschreibt das Projekt so, dass ein KI-Coding-Assistent (zum Beispie
 **CoLife** ist eine rundenbasierte **Private-Circle-Lebenssimulation & Alltagsplaner-App** als **Progressive Web App (PWA)** für iOS und Android (später optional via Capacitor als native Store-App).
 Spieler leben in einem gemeinsamen Haushalt (Start-Setting: **Lena**, Chemielaborantin bei der BASF in Schwarzheide, und **Tom**, Hubschrauber-/Gerätemechaniker auf dem Bundeswehr-Flugplatz) und meistern ihren Alltag: Schichtdienst, Pendeln & Tanken bei schwankenden Spritpreisen, Einkaufen, Kochen, Haushalt, Haus-Ausbau, Zufalls-Dilemmas sowie Unternehmungen mit der **Familie-&-Freunde-Bande** (Konzerte, Grillabende, Ausflüge, Nachbarschaftshilfe).
 
-## Funktionen (Stand v2.0)
+## Funktionen (Stand v3.0)
 
-- **Visuelle Live-Bühne (SVG/Canvas-Diorama):**
-  - Dynamische Darstellung des gemeinsamen Eigenheims & Grundstücks.
-  - Reagiert live auf Tageszeit (Morgen, Nachmittag, Abend/Nacht), Jahreszeit (Frühling, Sommer, Herbst, Winter) und Wetter (Sonne, Regen, Gewitter, Schnee).
-  - Gekaufte Haus-Upgrades (Holzterrasse & Grill, PV-Anlage auf dem Dach, Kaminofen mit rauchendem Schornstein, Werkstatt-Garage, Garten/Gewächshaus) werden direkt sichtbar am Haus dargestellt.
+- **Animierte & Interaktive Live-Bühne (SVG/CSS-Diorama):**
+  - Dynamische Darstellung des gemeinsamen Eigenheims & Grundstücks inkl. Silhouetten von BASF Schwarzheide und dem Bundeswehr-Fliegerhorst.
+  - Kontinuierliche Animationen: Fliegender Hubschrauber am Fliegerhorst, aufsteigender Rauch aus Schornstein & Werk, ziehende Wolken, funkelnde Sterne/Lichterkette, Regen-/Schneefall und hüpfender Hofhund Balu.
+  - **Tap-to-Inspect:** Gebäude, Carport, Terrasse und Haustiere im Diorama sind antippbar und zeigen Live-Status-Infos.
+  - Gekaufte Haus-Upgrades (Holzterrasse & Grill, PV-Anlage auf dem Dach, Kaminofen, Werkstatt-Garage, Garten/Gewächshaus) sowie Haustiere (Hund Balu, Katze Mimi) werden direkt sichtbar am Haus dargestellt.
+- **Game-Feel: Floating FX & WebAudio-Synthesizer:**
+  - Schwebende Belohnungs-Popups (`+145 €`, `🍲 Lecker!`, `⛽ 100 %`) direkt beim Tippen.
+  - Prozedurale Soundeffekte über die WebAudio API (`CoLifeAudio` in `app.js`, ohne externe Audiodateien, per `🔊/🔇` im Header schaltbar).
+- **Wochen-Missionen (Couple Quests) & Kühlschrank-Notiz:**
+  - Jede Woche 3 gemeinsame Paar-Missionen (`WEEKLY_QUEST_POOL`) mit Fortschrittsbalken und abholbaren Geld-/Harmonie-Prämien.
+  - Editierbare **Kühlschrank-Notiz (`fridgeNote`)**, mit der sich Partner Nachrichten direkt auf den Startbildschirm pinnen können (wird per Multiplayer mitsynchronisiert).
+- **Haustiere & Kurzurlaube (`LIFE_SPECIALS`):**
+  - Hofhund „Balu“ (schaltet Gassi-Runden frei & gibt täglichen Laune-Bonus) und Hauskatze „Mimi“ (+2 % tägliche Harmonie).
+  - Buchbare Kurzurlaube (Spreewald-Kahnfahrt, Ostsee-Wochenende) zum sofortigen Aufladen von Energie, Laune & Harmonie.
 - **Wochen- & Schicht-Rhythmus (Mo–So):**
   - 3 Phasen pro Tag (Morgen, Nachmittag, Abend).
-  - Echte Schichtpläne (Frühschicht, Spätschicht, Bereitschaft, freier Tag, Wochenende) und Karriere-Aufstieg mit steigendem Gehalt.
+  - Echte Schichtpläne (Frühschicht, Spätschicht, freier Tag) plus optionale **Präzisions-/Fokus-Schicht** mit Leistungsprämie und Karriere-Aufstieg (Level 1–4).
   - Dynamische Benzinpreise (€/Liter) und Kühlschrank-Vorräte.
 - **Alltags-Dilemmas & Ereigniskarten:**
   - Interaktive Entscheidungskarten mit mehreren Optionen und direkten Auswirkungen auf Geld, Energie, Harmonie, Karriere und Haus.

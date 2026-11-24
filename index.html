@@ -21,12 +21,13 @@
         </div>
         <div class="stage-badges">
           <span id="weather-badge" class="badge badge-glass">☀️ 17 °C</span>
+          <button id="sound-btn" class="badge badge-glass icon-pill" title="Ton ein/aus">🔊</button>
           <span id="sync-pill" class="badge badge-sync" title="Multiplayer-Status">🟢 Lokal</span>
         </div>
       </div>
 
-      <div id="diorama-container" class="diorama-container phase-morgen">
-        <!-- SVG-Eigenheim & Landschaft wird dynamisch von app.js gerendert -->
+      <div id="diorama-container" class="diorama-container" title="Tipp auf Gebäude oder Haustiere für Details!">
+        <!-- Animiertes SVG-Eigenheim & Landschaft wird von app.js gerendert -->
       </div>
 
       <!-- HUD-Schnellwerte -->
@@ -64,6 +65,12 @@
 
     <!-- VIEW 1: ALLTAG & SCHICHT -->
     <main id="view-play" class="view-section active">
+      <!-- Kühlschrank-Notiz für Partner -->
+      <div id="fridge-note-bar" class="fridge-note">
+        <span id="fridge-note-text">📌 Kühlschrank-Notiz: Willkommen zuhause! Wer kauft heute ein?</span>
+        <button id="edit-note-btn" class="note-btn" title="Notiz ändern">✏️ Notiz</button>
+      </div>
+
       <div class="player-tabs">
         <button id="tab-lena" class="tab-btn active" data-player="lena">
           <div class="tab-title">🧪 Lena <span id="lena-done-dot" class="status-dot"></span></div>
@@ -122,6 +129,17 @@
         <div id="actions-grid" class="actions-grid"></div>
       </section>
 
+      <!-- WOCHEN-MISSIONEN (Couple Goals) -->
+      <section class="card">
+        <div class="phase-header">
+          <div>
+            <h3>🎯 Eure Wochen-Missionen</h3>
+            <p class="muted">Schafft gemeinsame Ziele bis Sonntag für Extra-Prämien & Harmonie!</p>
+          </div>
+        </div>
+        <div id="quests-list" class="upgrades-grid"></div>
+      </section>
+
       <section class="card log-card">
         <div class="phase-header">
           <h3>📖 Tagesbuch</h3>
@@ -134,7 +152,7 @@
       </section>
     </main>
 
-    <!-- VIEW 2: HAUS-AUSBAU, KREDIT & MEILENSTEINE -->
+    <!-- VIEW 2: HAUS-AUSBAU, HAUSTIERE, KREDIT & MEILENSTEINE -->
     <main id="view-house" class="view-section">
       <section class="card">
         <div class="phase-header">
@@ -158,6 +176,16 @@
           </div>
         </div>
         <div id="upgrades-list" class="upgrades-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="phase-header">
+          <div>
+            <h3>🐾 Haustiere & 🌊 Gemeinsame Kurzurlaube</h3>
+            <p class="muted">Holt euch tierische Mitbewohner ins Haus oder gönnt euch eine Auszeit zu zweit!</p>
+          </div>
+        </div>
+        <div id="specials-list" class="upgrades-grid"></div>
       </section>
 
       <section class="card">
