@@ -1,0 +1,10 @@
+{
+  "name": "CoLife – Family Planner & Life Simulator",
+  "short_name": "CoLife",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#141821",
+  "theme_color": "#1e2533",
+  "lang": "de",
+  "icons": []
+}

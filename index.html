@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e2533" />
+  <title>CoLife – Alltag zu zweit</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="brand-row">
+        <h1>CoLife</h1>
+        <span id="day-badge" class="badge">Tag 1 · Frühling</span>
+        <span id="weather-badge" class="badge badge-soft">☀️ Mild (16 °C)</span>
+      </div>
+
+      <div class="household-stats">
+        <div class="stat-pill">
+          <span class="label">Haushaltskasse</span>
+          <strong id="money-val">2.450 €</strong>
+        </div>
+        <div class="stat-pill">
+          <span class="label">Haus & Ordnung</span>
+          <strong id="house-val">82 %</strong>
+        </div>
+        <div class="stat-pill">
+          <span class="label">Harmonie</span>
+          <strong id="harmony-val">78 %</strong>
+        </div>
+      </div>
+    </header>
+
+    <nav class="player-tabs" aria-label="Haushaltsmitglieder">
+      <button id="tab-lena" class="tab-btn active" data-player="lena">
+        🧪 Lena <small>BASF · Labor</small>
+      </button>
+      <button id="tab-tom" class="tab-btn" data-player="tom">
+        🚁 Tom <small>Flugplatz · Mechanik</small>
+      </button>
+    </nav>
+
+    <main class="main-content">
+      <section class="card player-card">
+        <div class="player-header">
+          <div>
+            <h2 id="player-name">Lena</h2>
+            <p id="player-job" class="muted">Chemielaborantin · BASF Schwarzheide</p>
+          </div>
+          <span id="player-vacation" class="badge badge-soft">🏖️ 28 Urlaubstage</span>
+        </div>
+
+        <div class="bars-grid">
+          <div class="bar-item">
+            <div class="bar-label"><span>Energie</span><span id="energy-text">85 / 100</span></div>
+            <div class="bar-track"><div id="energy-bar" class="bar-fill energy" style="width: 85%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label"><span>Zufriedenheit</span><span id="mood-text">75 / 100</span></div>
+            <div class="bar-track"><div id="mood-bar" class="bar-fill mood" style="width: 75%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label"><span>Tank</span><span id="fuel-text">65 %</span></div>
+            <div class="bar-track"><div id="fuel-bar" class="bar-fill fuel" style="width: 65%"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card phase-card">
+        <div class="phase-header">
+          <h3 id="phase-title">Phase: Morgen</h3>
+          <span id="phase-status" class="muted">Wähle eine Aktion für diese Phase</span>
+        </div>
+        <div id="actions-grid" class="actions-grid"></div>
+      </section>
+
+      <section class="card log-card">
+        <div class="phase-header">
+          <h3>Tagesbuch & Ereignisse</h3>
+          <button id="next-day-btn" class="primary-btn" disabled>Tag abschließen →</button>
+        </div>
+        <ul id="event-log" class="event-log"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="logic.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
